@@ -4,12 +4,13 @@ __all__ = ['Table']
 
 import abc
 import collections
-import collections.abc
+
+# import collections.abc
 import functools
 import inspect
 import itertools
 import numbers
-import urllib.parse
+import urlparse
 import warnings
 
 import numpy as np
@@ -24,11 +25,11 @@ import datascience.util as _util
 from datascience.util import make_array
 import datascience.predicates as _predicates
 
-class Table(collections.abc.MutableMapping):
+class Table(collections.MutableMapping):
     """A sequence of string-labeled columns."""
     plots = collections.deque(maxlen=10)
 
-    def __init__(self, labels=None, _deprecated=None, *, formatter=_formats.default_formatter):
+    def __init__(self, labels=None, _deprecated=None, formatter=_formats.default_formatter):
         """Create an empty table with column labels.
 
         >>> tiles = Table(make_array('letter', 'count', 'points'))
@@ -117,7 +118,7 @@ class Table(collections.abc.MutableMapping):
         """
         # Look for .csv at the end of the path; use "," as a separator if found
         try:
-            path = urllib.parse.urlparse(filepath_or_buffer).path
+            path = urlparse.urlparse(filepath_or_buffer).path
             if 'data8.berkeley.edu' in filepath_or_buffer:
                 raise ValueError('data8.berkeley.edu requires authentication, '
                                  'which is not supported.')
@@ -383,12 +384,16 @@ class Table(collections.abc.MutableMapping):
 
     def move_to_start(self, column_label):
         """Move a column to the first in order."""
-        self._columns.move_to_end(column_label, last=False)
+        value = self._columns.pop(column_label)
+        pairs = [(column_label, value), ] + self._columns.items()
+        self._columns = collections.OrderedDict(pairs)
         return self
 
     def move_to_end(self, column_label):
         """Move a column to the last in order."""
-        self._columns.move_to_end(column_label)
+        value = self._columns.pop(column_label)
+        pairs = self._columns.items() + [(column_label, value), ]
+        self._columns = collections.OrderedDict(pairs)
         return self
 
     def append(self, row_or_table):
@@ -569,7 +574,7 @@ class Table(collections.abc.MutableMapping):
     # Transformation #
     ##################
 
-    def copy(self, *, shallow=False):
+    def copy(self, shallow=False):
         """Return a copy of a table."""
         table = type(self)()
         for label in self.labels:
@@ -1666,9 +1671,9 @@ class Table(collections.abc.MutableMapping):
         """
         if len(labels_and_values) == 1:
             labels_and_values = labels_and_values[0]
-        if isinstance(labels_and_values, collections.abc.Mapping):
+        if isinstance(labels_and_values, collections.Mapping):
             labels_and_values = list(labels_and_values.items())
-        if not isinstance(labels_and_values, collections.abc.Sequence):
+        if not isinstance(labels_and_values, collections.Sequence):
             labels_and_values = list(labels_and_values)
         if not labels_and_values:
             return self
@@ -2367,7 +2372,7 @@ class Table(collections.abc.MutableMapping):
         for label, column in zip(pvt_labels,vals):
             t[label] = column
 
-    def hist(self, *columns, overlay=True, bins=None, bin_column=None, unit=None, counts=None, group=None, side_by_side=False, width=6, height=4, **vargs):
+    def hist(self, *columns, **kwargs):
         """Plots one histogram for each column in columns. If no column is
         specified, plot all columns.
 
@@ -2434,6 +2439,15 @@ class Table(collections.abc.MutableMapping):
         >>> t.hist('value', group='category') # doctest: +SKIP
         <two overlaid histograms of the data [1, 2, 3] and [2, 5]>
         """
+        defaults = collections.OrderedDict([('overlay',True), ('bins', None),
+                                            ('bin_column', None), ('unit', None),
+                                            ('counts', None), ('group', None),
+                                            ('side_by_side', False), ('width', 6),
+                                            ('height', 4)])
+        map(lambda x: kwargs.setdefault(x, defaults[x]), defaults)
+        overlay, bins, bin_column, unit, counts, group, side_by_side, width, height = [kwargs.pop(key) for key in defaults.keys()]
+        vargs = kwargs
+
         if counts is not None and bin_column is None:
             warnings.warn("counts arg of hist is deprecated; use bin_column")
             bin_column=counts
@@ -2628,7 +2642,7 @@ class Table(collections.abc.MutableMapping):
         def asdict(self):
             return collections.OrderedDict(zip(self._table.labels, self))
 
-    class Rows(collections.abc.Sequence):
+    class Rows(collections.Sequence):
         """An iterable view over the rows in a table."""
         def __init__(self, table):
             self._table = table
@@ -2741,7 +2755,7 @@ def _is_non_string_iterable(value):
         return False
     if hasattr(value, '__iter__'):
         return True
-    if isinstance(value, collections.abc.Sequence):
+    if isinstance(value, collections.Sequence):
         return True
     return False
 
@@ -2758,7 +2772,8 @@ def _vertical_x(axis, ticks=None, max_width=5):
 # Slicing support #
 ###################
 
-class _RowSelector(metaclass=abc.ABCMeta):
+class _RowSelector():
+    __metaclass__ = abc.ABCMeta
     def __init__(self, table):
         self._table = table
 
@@ -2912,5 +2927,5 @@ class _RowExcluder(_RowSelector):
         return self._table._with_columns(zip(*rows))
 
 # For Sphinx: grab the docstrings from `Taker.__getitem__` and `Withouter.__getitem__`
-Table.take.__doc__ = _RowTaker.__getitem__.__doc__
-Table.exclude.__doc__ = _RowExcluder.__getitem__.__doc__
+#Table.take.__doc__ = _RowTaker.__getitem__.__doc__
+#Table.exclude.__doc__ = _RowExcluder.__getitem__.__doc__

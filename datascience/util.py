@@ -57,8 +57,8 @@ def percentile(p, arr=None):
     if p == 0:
         return min(arr)
     assert 0 < p <= 100, 'Percentile requires a percent'
-    i = (p/100) * len(arr)
-    return sorted(arr)[math.ceil(i) - 1]
+    i = (float(p)/100) * len(arr)
+    return sorted(arr)[int(math.ceil(i)) - 1]
 
 
 def plot_normal_cdf(rbound=None, lbound=None, mean=0, sd=1):

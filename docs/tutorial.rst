@@ -82,7 +82,7 @@ And this is how we load it in as a :class:`Table` using
 
 .. ipython:: python
 
-    Table.read_table('sample.csv')
+    Table.read_table(r'sample.csv')
 
 CSVs from URLs are also valid inputs to
 :meth:`~datascience.tables.Table.read_table`:

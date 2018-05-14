@@ -1159,7 +1159,7 @@ def test_sample_wrepl_basic(table):
 
 def test_sample_wwgts_basic(table):
     """Tests that sample with weights doesn't break"""
-    table.sample(table.num_rows, weights=[1/4]*4)
+    table.sample(table.num_rows, weights=[1.0/4]*4)
 
 
 def test_sample_weights_ne1(table):

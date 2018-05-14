@@ -7,10 +7,10 @@ __all__ = ['default_formatter', 'Formatter', 'NumberFormatter',
 
 import numpy as np
 
-from datetime import datetime, timezone
+from datetime import datetime   #, timezone
+import time
 
-
-class Formatter:
+class Formatter(object):
     """String formatter that truncates long values."""
 
     min_width = 4
@@ -86,7 +86,7 @@ class NumberFormatter(Formatter):
     """Format numbers that may have delimiters."""
 
     def __init__(self, decimals=2, decimal_point='.', separator=',', int_to_float=False, *args, **vargs):
-        super().__init__(*args, **vargs)
+        super(NumberFormatter, self).__init__(*args, **vargs)
         self.decimals = decimals
         self.decimal_point = decimal_point
         self.separator = separator
@@ -116,7 +116,7 @@ class CurrencyFormatter(NumberFormatter):
     """Format currency and convert to float."""
 
     def __init__(self, symbol="$", *args, **vargs):
-        super().__init__(*args, **vargs)
+        super(CurrencyFormatter, self).__init__(*args, **vargs)
         assert isinstance(symbol, str)
         self.symbol = symbol
 
@@ -128,24 +128,27 @@ class CurrencyFormatter(NumberFormatter):
         if isinstance(value, str):
             assert value.startswith(self.symbol), "Currency does not start with " + self.symbol
             value = value.lstrip(self.symbol)
-        return super().convert_value(value)
+        return super(CurrencyFormatter, self).convert_value(value)
 
     def format_value(self, value):
         """Format currency."""
-        return self.symbol + super().format_value(value)
+        return self.symbol + super(CurrencyFormatter, self).format_value(value)
 
 
 class DateFormatter(Formatter):
     """Format date & time and convert to UNIX timestamp."""
 
     def __init__(self, format="%Y-%m-%d %H:%M:%S.%f", *args, **vargs):
-        super().__init__(*args, **vargs)
+        super(DateFormatter, self).__init__(*args, **vargs)
         assert isinstance(format, str)
         self.format = format
 
     def convert_value(self, value):
         """Convert 2015-08-03 to a Unix timestamp int."""
-        return datetime.strptime(value, self.format).timestamp()
+        datevalue = datetime.strptime(value, self.format)
+        epoch = datetime(1970, 1, 1, 0, 0)
+        delta = datevalue - epoch
+        return delta.total_seconds()
 
     def format_value(self, value):
         """Format timestamp as a string."""
@@ -156,7 +159,7 @@ class PercentFormatter(Formatter):
     """Format a number as a percentage."""
 
     def __init__(self, decimals=2, *args, **vargs):
-        super().__init__(*args, **vargs)
+        super(PercentFormatter, self).__init__(*args, **vargs)
         assert isinstance(decimals, int)
         self.decimals = decimals
 
@@ -171,7 +174,7 @@ class DistributionFormatter(PercentFormatter):
     def convert_column(self, values):
         """Normalize values."""
         assert all(values >= 0), 'Cannot normalize a column with negatives'
-        total = sum(values)
+        total = 1.0*sum(values)
         if total > 0:
             return values / total
         else:

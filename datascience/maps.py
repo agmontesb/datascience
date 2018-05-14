@@ -10,7 +10,7 @@ import numpy as np
 
 import abc
 import collections
-import collections.abc
+# import collections.abc
 import functools
 import json
 import math
@@ -21,8 +21,9 @@ from .tables import Table
 _number = (int, float, np.number)
 
 
-class _FoliumWrapper(abc.ABC):
+class _FoliumWrapper(object):
     """A map element that can be drawn."""
+    __metaclass__ = abc.ABCMeta
     _width = 0
     _height = 0
     _folium_map = None
@@ -66,7 +67,7 @@ class _FoliumWrapper(abc.ABC):
         """Set the _folium_map attribute to a map."""
 
 
-class Map(_FoliumWrapper, collections.abc.Mapping):
+class Map(_FoliumWrapper, collections.Mapping):
     """A map from IDs to features. Keyword args are forwarded to folium."""
 
     _mapper = folium.Map
@@ -76,7 +77,7 @@ class Map(_FoliumWrapper, collections.abc.Mapping):
     def __init__(self, features=(), ids=(), width=960, height=500, **kwargs):
         if isinstance(features, np.ndarray):
             features = list(features)
-        if isinstance(features, collections.abc.Sequence):
+        if isinstance(features, collections.Sequence):
             if len(ids) == len(features):
                 features = dict(zip(ids, features))
             else:
@@ -133,7 +134,7 @@ class Map(_FoliumWrapper, collections.abc.Mapping):
         bounds = self._autobounds()
         attrs = {}
 
-        midpoint = lambda a, b: (a + b)/2
+        midpoint = lambda a, b: (a + b)/2.0
         attrs['location'] = (
             midpoint(bounds['min_lat'], bounds['max_lat']),
             midpoint(bounds['min_lon'], bounds['max_lon'])
@@ -150,9 +151,9 @@ class Map(_FoliumWrapper, collections.abc.Mapping):
         try:
             lat_diff = bounds['max_lat'] - bounds['min_lat']
             lon_diff = bounds['max_lon'] - bounds['min_lon']
-            area, max_area = lat_diff*lon_diff, 180*360
+            area, max_area = 1.0*lat_diff*lon_diff, 180*360.0
             if area:
-                factor = 1 + max(0, 1 - self._width/1000)/2 + max(0, 1-area**0.5)/2
+                factor = 1 + max(0, 1 - self._width/1000.0)/2.0 + max(0, 1-area**0.5)/2.0
                 zoom = math.log(area/max_area)/-factor
             else:
                 zoom = self._default_zoom
@@ -241,7 +242,7 @@ class Map(_FoliumWrapper, collections.abc.Mapping):
         """
         # Set values and ids to both be simple sequences by inspecting values
         id_name, value_name = 'IDs', 'values'
-        if isinstance(values, collections.abc.Mapping):
+        if isinstance(values, collections.Mapping):
             assert not ids, 'IDs and a map cannot both be used together'
             if hasattr(values, 'columns') and len(values.columns) == 2:
                 table = values
@@ -334,7 +335,7 @@ class Map(_FoliumWrapper, collections.abc.Mapping):
             else:
                 contents = open(path, 'r').read()
             data = json.loads(contents)
-        except FileNotFoundError:
+        except IOError:
             pass
         # TODO web address
         assert data, 'MapData accepts a valid geoJSON object, geoJSON string, or path to a geoJSON file'
@@ -361,10 +362,11 @@ class Map(_FoliumWrapper, collections.abc.Mapping):
         return features
 
 
-class _MapFeature(_FoliumWrapper, abc.ABC):
+class _MapFeature(_FoliumWrapper):
     """A feature displayed on a map. When displayed alone, a map is created."""
 
     # Method name for a folium.Map to add the feature
+    __metaclass__ = abc.ABCMeta
     _map_method_name = ""
 
     # Default dimensions for displaying the feature in isolation
@@ -531,7 +533,7 @@ class Circle(Marker):
     _has_radius = True
 
     def __init__(self, lat, lon, popup='', color='blue', radius=10, **kwargs):
-        super().__init__(lat, lon, popup, color, radius=radius, line_color=None, **kwargs)
+        super(Circle, self).__init__(lat, lon, popup, color, radius=radius, line_color=None, **kwargs)
 
 
 class Region(_MapFeature):
