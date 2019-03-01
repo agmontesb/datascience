@@ -27,7 +27,7 @@ def make_array(*elements):
     array([2, 3, 4])
     >>> make_array("foo", "bar")
     array(['foo', 'bar'],
-          dtype='<U3')
+          dtype='|S3')
     >>> make_array()
     array([], dtype=float64)
     """

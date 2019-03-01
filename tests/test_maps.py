@@ -1,6 +1,7 @@
 import doctest
 import json
 import pytest
+import os
 
 import datascience as ds
 from datascience import maps
@@ -9,7 +10,7 @@ from datascience import maps
 @pytest.fixture(scope='function')
 def states():
     """Read a map of US states."""
-    mpath = r'C:\Users\Personal\PycharmProjects\datascience\tests\us-states.json'
+    mpath = os.path.abspath('./us-states.json')
     return ds.Map.read_geojson(mpath)
 
 
@@ -115,7 +116,7 @@ def test_region_html(states):
 
 def test_geojson(states):
     """ Tests that geojson returns the original US States data """
-    mpath = r'C:\Users\Personal\PycharmProjects\datascience\tests\us-states.json'
+    mpath = os.path.abspath('./us-states.json')
     data = json.load(open(mpath, 'r'))
     geo = states.geojson()
     assert data == geo, '{}\n{}'.format(data, geo)
@@ -153,20 +154,20 @@ def test_bounds_limits():
 
 def test_color_table(states):
     """ Tests that color can take a Table. """
-    mpath = r'C:\Users\Personal\PycharmProjects\datascience\tests\us-unemployment.csv'
+    mpath = os.path.abspath('./us-unemployment.csv')
     data = ds.Table.read_table(mpath)
     states.color(data).show()
 
 
 def test_color_dict(states):
     """ Tests that color can take a dict. """
-    mpath = r'C:\Users\Personal\PycharmProjects\datascience\tests\us-unemployment.csv'
+    mpath = os.path.abspath('./us-unemployment.csv')
     data = ds.Table.read_table(mpath)
     states.color(dict(zip(*data.columns))).show()
 
 
 def test_color_values_and_ids(states):
     """ Tests that color can take values and ids. """
-    mpath = r'C:\Users\Personal\PycharmProjects\datascience\tests\us-unemployment.csv'
+    mpath = os.path.abspath('./us-unemployment.csv')
     data = ds.Table.read_table(mpath)
     states.color(data['Unemployment'], data['State']).show()

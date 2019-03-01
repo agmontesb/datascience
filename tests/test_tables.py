@@ -1259,7 +1259,7 @@ def test_scatter(numbers_table):
 def test_scatter_error(table):
     """Tests that Table.scatter raises an error when the table contains
     non-numerical values."""
-
+    table = table.with_row(('q', 'w', '2'))
     with pytest.raises(ValueError):
         table.scatter('letter')
 

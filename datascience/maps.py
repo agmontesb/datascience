@@ -343,7 +343,7 @@ class Map(_FoliumWrapper, collections.Mapping):
 
     @staticmethod
     def _read_geojson_features(data, features=None, prefix=""):
-        """Return a dict of features keyed by ID."""
+        """Return a dict of fatures keyed by ID."""
         if features is None:
             features = collections.OrderedDict()
         for i, feature in enumerate(data['features']):

@@ -342,7 +342,7 @@ class Table(collections.MutableMapping):
         >>> t.apply(lambda x: x - 1, 'count', 'points')
         Traceback (most recent call last):
             ...
-        TypeError: <lambda>() takes 1 positional argument but 2 were given
+        TypeError: <lambda>() takes exactly 1 argument (2 given)
         >>> t.apply(lambda x: x - 1, 'counts')
         Traceback (most recent call last):
             ...
